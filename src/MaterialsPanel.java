@@ -80,7 +80,7 @@ public class MaterialsPanel extends javax.swing.JPanel {
 
         Utility.setPlaceholder(queryField, "Search");
 
-        //Sets search timer to execute in a period of 500 milliseconds 
+        //Sets search timer to execute in a period of 500 milliseconds
         searchTimer = new Timer(500, (ActionEvent e) -> {
             defaultSearch();
         });
@@ -103,7 +103,7 @@ public class MaterialsPanel extends javax.swing.JPanel {
         table.setModel(defaultTableModel);
     }
 
-    private void defaultSearch() {
+    public void defaultSearch() {
         String query = queryField.getText();
         if (Utility.isPlaceholderShowing(queryField)) {
             query = "";
@@ -265,7 +265,6 @@ public class MaterialsPanel extends javax.swing.JPanel {
         // TODO add your handling code here:
         scheduleDefaultSearch();
     }//GEN-LAST:event_queryFieldKeyTyped
-
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.ButtonGroup categoryGroup;

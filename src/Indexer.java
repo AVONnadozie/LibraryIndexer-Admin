@@ -6,7 +6,8 @@ import java.io.StringReader;
 import java.net.URI;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
@@ -38,7 +39,7 @@ public class Indexer {
     private final Library library;
     private final File indexDir;
     private final ArrayList<ProgressListener> listeners;
-    private final StandardAnalyzer analysis;
+    private final Analyzer analysis;
     private IndexWriter idx;
     private FSDirectory dir;
 
@@ -46,7 +47,7 @@ public class Indexer {
         this.library = library;
         listeners = new ArrayList<>();
         indexDir = new File(Utility.getIndexFolderLocation());
-        analysis = new StandardAnalyzer(DatabaseImpl.getStopWords());
+        analysis = new EnglishAnalyzer(DatabaseImpl.getStopWords());
     }
 
     public boolean addProgressListener(ProgressListener listener) {
@@ -120,18 +121,11 @@ public class Indexer {
             });
 
             try {
-                if (listFiles.length > 0 && DatabaseImpl.clearIndexFiles()) {
-                    for (File file : listFiles) {
-                        DatabaseImpl.saveIndexFile(file);
-                    }
-                    DatabaseImpl.getConnection().commit();
-                    modified = false;
-                    return true;
-                } else {
-                    DatabaseImpl.getConnection().rollback();
-                    return false;
-                }
-            } catch (SQLException ex) {
+                DatabaseImpl.saveIndexFiles(listFiles);
+                DatabaseImpl.getConnection().commit();
+                modified = false;
+                return true;
+            } catch (SQLException | IOException ex) {
                 DatabaseImpl.getConnection().rollback();
                 Utility.writeLog(ex);
                 return false;
@@ -256,6 +250,9 @@ public class Indexer {
                         break;
                     case TYPE:
                         doc.add(new StringField(value.name(), material.getType().name(), Field.Store.YES));
+                        break;
+                    case ISBN:
+                        doc.add(new StringField(value.name(), material.getISBN(), Field.Store.YES));
                         break;
                     default:
                         throw new AssertionError(value.name());

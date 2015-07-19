@@ -20,6 +20,7 @@ public final class MainWindow extends javax.swing.JFrame {
     private static MainWindow thisClass;
     private final Dimension lastWindowSize;
     private final Point point;
+    private final MaterialsPanel materials;
 
     private MainWindow() {
         point = new Point();
@@ -34,7 +35,7 @@ public final class MainWindow extends javax.swing.JFrame {
         LoginPanel login = new LoginPanel();
         scene.add(login, "login");
 
-        MaterialsPanel materials = new MaterialsPanel();
+        materials = new MaterialsPanel();
         scene.add(materials, "materials");
 
         SettingsPanel settings = new SettingsPanel();
@@ -82,13 +83,17 @@ public final class MainWindow extends javax.swing.JFrame {
 
     public void showMaterialsPanel() {
         getSceneLayout().show(scene, "materials");
+        try {
+            materials.defaultSearch();
+        } catch (IllegalStateException e) {
+        }
     }
 
     public void showSettingsPanel() {
         getSceneLayout().show(scene, "settings");
     }
-    
-    public void showNavButtons(boolean state){
+
+    public void showNavButtons(boolean state) {
         materialNavButton.setVisible(state);
         settingsNavButton.setVisible(state);
     }
@@ -365,7 +370,6 @@ public final class MainWindow extends javax.swing.JFrame {
         // TODO add your handling code here:
         bodyMouseDragged(evt);
     }//GEN-LAST:event_mouseDragged
-
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JToggleButton fitToScreenToggleButton;

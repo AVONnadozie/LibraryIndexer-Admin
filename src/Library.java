@@ -4,8 +4,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.attribute.UserPrincipal;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -167,9 +165,10 @@ public class Library {
                     try (FileInputStream is = new FileInputStream(file)) {
                         //File
                         Material material = new Material(file.toURI());
-                        UserPrincipal owner = Files.getOwner(file.toPath());
-                        material.setAuthor(owner.getName());
-                        material.setTitle(file.getName());
+                        material.setAuthor("Unknown Author");
+                        String name = file.getName();
+                        int stop = name.lastIndexOf('.');
+                        material.setTitle(name.substring(0, stop)); //Remove extension
                         material.setExcluded(false);
                         material.setKeywords(new String[]{});
                         material.setDateAdded(Date.from(Instant.now()));
@@ -315,6 +314,12 @@ public class Library {
         });
 
         DatabaseImpl.removeObsoleteMaterials();
+
+        try {
+            update();
+        } catch (SQLException | IOException ex) {
+            Utility.writeLog(ex);
+        }
 
         listeners.stream().forEach((listener) -> {
             listener.onStop("Done.");

@@ -13,6 +13,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.lucene.analysis.util.CharArraySet;
 
 /**
@@ -189,44 +192,74 @@ public class DatabaseImpl {
     /**
      * Delete materials from database that are no longer in any Library location
      */
-    
     //Bug: The method does not properly implement the documentation above, fix it
     public static void removeObsoleteMaterials() {
         try {
             Statement s = getConnection().createStatement();
             ResultSet rs = s.executeQuery("select * from materials");
-
+            Library library = Library.getInstance();
+            ArrayList<String> obsolete = new ArrayList<>();
+            ArrayList<Object[]> libraryStatus = new ArrayList<>();
             while (rs.next()) {
+                String path = rs.getString("path");
                 try {
-                    File f = new File(new URI(rs.getString("path")));
+                    File f = new File(new URI(path));
                     if (!Files.exists(f.toPath())) {
-                        deleteMaterial(rs.getString("path"));
+                        obsolete.add(path);
+                    } else {
+                        boolean inLibrary = library.getMaterial(new URI(path)) != null;
+                        libraryStatus.add(new Object[]{path, inLibrary});
                     }
                 } catch (URISyntaxException ex) {
                     //Path could not be resolved
-                    deleteMaterial(rs.getString("path"));
+                    obsolete.add(path);
                 }
             }
+            deleteMaterials(obsolete);
+            setLibraryStatus(libraryStatus);
         } catch (SQLException ex) {
             Utility.writeLog(ex);
         }
     }
 
-    private static boolean deleteMaterial(String path) {
+    private static void deleteMaterials(ArrayList<String> path) {
         try {
-            Statement s = getConnection().createStatement();
-            s.executeUpdate("delete from materials where path = '" + path + "'");
-            return true;
+            PreparedStatement s = getConnection().prepareStatement("delete from materials where path = ?");
+            path.stream().forEach((p) -> {
+                try {
+                    s.setString(1, p);
+                    s.execute();
+                } catch (SQLException ex) {
+                    Utility.writeLog(ex);
+                }
+            });
         } catch (SQLException ex) {
-            Utility.writeLog(ex);
-            return false;
+            Logger.getLogger(DatabaseImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    public static void saveIndexFile(File file) throws SQLException {
+    private static void setLibraryStatus(ArrayList<Object[]> libraryStatus) {
+        try {
+            PreparedStatement s = getConnection()
+                    .prepareStatement("update materials set in_library = ? where path = ?");
+            libraryStatus.stream().forEach((p) -> {
+                try {
+                    s.setBoolean(1, (boolean) p[1]);
+                    s.setString(2, p[0].toString());
+                    s.execute();
+                } catch (SQLException ex) {
+                    Utility.writeLog(ex);
+                }
+            });
+        } catch (SQLException ex) {
+            Logger.getLogger(DatabaseImpl.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public static void saveIndexFiles(File[] files) throws SQLException, IOException {
         //Insert file; on duplicate, update
-        if (file != null && file.exists()) {
-            try (InputStream is = new FileInputStream(file)) {
+        if (files != null) {
+            if (files.length > 1 && clearIndexFiles()) {
                 PreparedStatement ps = getConnection()
                         .prepareStatement("insert into index_files set "
                                 + "file_name = ?, "
@@ -235,12 +268,14 @@ public class DatabaseImpl {
                                 + "on duplicate key "
                                 + "update content = ?, "
                                 + "last_modified = now()");
-                ps.setString(1, file.getName());
-                ps.setBinaryStream(2, is);
-                ps.setBinaryStream(3, is);
-                ps.execute();
-            } catch (IOException ex) {
-                Utility.writeLog(ex);
+                for (File file : files) {
+                    try (InputStream is = new FileInputStream(file)) {
+                        ps.setString(1, file.getName());
+                        ps.setBinaryStream(2, is);
+                        ps.setBinaryStream(3, is);
+                        ps.execute();
+                    }
+                }
             }
         } else {
             throw new IllegalArgumentException("File is invalid");

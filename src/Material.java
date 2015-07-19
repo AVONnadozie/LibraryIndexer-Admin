@@ -32,6 +32,7 @@ public class Material implements Comparable<Material> {
      */
     public Material(URI path) {
         this.path = path;
+        this.ISBN = "";
     }
 
     /**
@@ -96,7 +97,7 @@ public class Material implements Comparable<Material> {
         this.ISBN = ISBN;
         noteChanges();
     }
-    
+
     public void setLastModificationTime(Date lastModificationTime) {
         this.lastModificationTime = lastModificationTime;
         modified = true;
