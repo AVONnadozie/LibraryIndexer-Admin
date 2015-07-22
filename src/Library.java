@@ -39,9 +39,8 @@ public class Library {
      * This might be a lengthy operation. therfore It is advisable no to invoke
      * this method on the Event dispatch thread.
      *
-     * @return
      */
-    public synchronized boolean init() {
+    public synchronized void init() {
         if (busy) {
             throw new IllegalStateException("Library is busy");
         }
@@ -50,7 +49,6 @@ public class Library {
         syncLibrary();
         materials.sort((Material o1, Material o2) -> o1.getTitle().compareTo(o2.getTitle()));
         busy = false;
-        return true;
     }
 
     public ArrayList<Material> searchLibrary(String query) {

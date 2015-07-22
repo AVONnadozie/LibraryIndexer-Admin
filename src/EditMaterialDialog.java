@@ -1,4 +1,5 @@
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import javax.swing.JButton;
@@ -31,7 +32,7 @@ public class EditMaterialDialog extends javax.swing.JDialog {
             excludeCheckBox.setSelected(material.isExcluded());
             titleField.setText(material.getTitle());
             authorField.setText(material.getAuthor());
-            pathField.setText(material.getPath().toString());
+            pathField.setText(new File(material.getPath()).toString());
 //            dateAddedLabel.setText(material.getDateAdded().toString());
             keywordsTextArea.setText(String.join(", ", material.getKeywords()));
             previewTextPane.setText(material.getPreview());
@@ -295,7 +296,7 @@ public class EditMaterialDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_okButtonActionPerformed
 
     private void excludeCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_excludeCheckBoxActionPerformed
-        // TODO add your handling code here:        
+        // TODO add your handling code here:
         fieldEdited = true;
     }//GEN-LAST:event_excludeCheckBoxActionPerformed
 
@@ -303,7 +304,6 @@ public class EditMaterialDialog extends javax.swing.JDialog {
         // TODO add your handling code here:
         fieldEdited = true;
     }//GEN-LAST:event_KeyTyped
-
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField authorField;

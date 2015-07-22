@@ -162,6 +162,7 @@ public class Indexer {
                 for (int i = 0; i < noOfMaterials; i++) {
                     Document doc = getDocument(materials.get(i));
                     idx.addDocument(doc);
+                    idx.commit();
                     modified = true;
                     updateProgress(i + 1, noOfMaterials);
                 }
@@ -224,21 +225,23 @@ public class Indexer {
             FieldType type = new FieldType();
             type.setTokenized(true);
             type.setIndexed(true);
-            type.setStored(true);
+//            type.setStored(true);
             for (IndexFields value : IndexFields.values()) {
                 switch (value) {
                     case CONTENT:
                         doc.add(new TextField(value.name(),
-                                new StringReader(contenthandler == null ? "" : contenthandler.toString())));
+                                new StringReader(contenthandler == null
+                                                ? material.getTitle() //Index title if no content
+                                                : contenthandler.toString())));
                         break;
                     case TITLE:
-                        doc.add(new Field(value.name(), material.getTitle(), type));
+                        doc.add(new TextField(value.name(), new StringReader(material.getTitle())));
                         break;
                     case PATH:
-                        doc.add(new Field(value.name(), material.getPath().toString(), type));
+                        doc.add(new StringField(value.name(), material.getPath().toString(), Field.Store.YES));
                         break;
                     case AUTHOR:
-                        doc.add(new Field(value.name(), material.getAuthor(), type));
+                        doc.add(new TextField(value.name(), new StringReader(material.getAuthor())));
                         break;
                     case KEYWORDS:
                         doc.add(new Field(value.name(), String.join(", ", material.getKeywords()), type));

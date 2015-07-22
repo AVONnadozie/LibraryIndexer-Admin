@@ -6,6 +6,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.Timer;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 
 public class MaterialsPanel extends javax.swing.JPanel {
 
@@ -90,17 +91,28 @@ public class MaterialsPanel extends javax.swing.JPanel {
 
     private void populateTable() {
         Object[] columnNames = new Object[]{
-            "Title", "Author", "Type", "ISBN"
+            "S/N", "Title", "Author", "Type", "ISBN"
         };
         Object[][] data = new Object[materials.size()][columnNames.length];
         for (int i = 0; i < data.length; i++) {
-            data[i][0] = materials.get(i).getTitle();
-            data[i][1] = materials.get(i).getAuthor();
-            data[i][2] = materials.get(i).getType();
-            data[i][3] = materials.get(i).getISBN();
+            data[i][0] = i + 1;
+            data[i][1] = materials.get(i).getTitle();
+            data[i][2] = materials.get(i).getAuthor();
+            data[i][3] = materials.get(i).getType();
+            data[i][4] = materials.get(i).getISBN();
         }
         DefaultTableModel defaultTableModel = new DefaultTableModel(data, columnNames);
         table.setModel(defaultTableModel);
+        table.getTableHeader().setReorderingAllowed(true);
+        table.getTableHeader().setResizingAllowed(true);
+        table.getColumnModel().getColumn(0).setMaxWidth(50);
+        table.getColumnModel().getColumn(1).setWidth(400);
+        table.getColumnModel().getColumn(2).setMaxWidth(250);
+        table.getColumnModel().getColumn(3).setMaxWidth(100);
+        table.getColumnModel().getColumn(4).setMaxWidth(180);
+        TableRowSorter<DefaultTableModel> tableRowSorter = new TableRowSorter<>(defaultTableModel);
+        tableRowSorter.setComparator(0, (Integer o1, Integer o2) -> o1.compareTo(o2));
+        table.setRowSorter(tableRowSorter);
     }
 
     public void defaultSearch() {
@@ -186,6 +198,7 @@ public class MaterialsPanel extends javax.swing.JPanel {
         jLabel1.setFont(new java.awt.Font("Segoe UI Light", 0, 20)); // NOI18N
         jLabel1.setText("Materials");
 
+        table.setAutoCreateRowSorter(true);
         table.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null},
